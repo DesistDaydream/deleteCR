@@ -5,37 +5,47 @@ import (
 	"flag"
 	"fmt"
 
-	"k8s.io/client-go/tools/clientcmd"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-var crBaseInfo = schema.GroupVersionResource{
-	Group:    "rabbitmq.com",
-	Version:  "v1beta1",
-	Resource: "rabbitmqclusters",
+// DeleteTarget 想要删除的 CR 的信息
+type DeleteTarget struct {
+	Namespace  string
+	CRName     string
+	CRBaseInfo schema.GroupVersionResource
 }
 
-func delete(clientset dynamic.Interface, namespace string, name string) error {
-	return clientset.Resource(crBaseInfo).Namespace(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (t *DeleteTarget) delete(clientset dynamic.Interface) error {
+	return clientset.Resource(t.CRBaseInfo).Namespace(t.Namespace).Delete(context.TODO(), t.CRName, metav1.DeleteOptions{})
 }
 
 // DeleteCR 删除一个 CR 对象
-func DeleteCR(config *rest.Config, ns string, name string) {
+func (t *DeleteTarget) DeleteCR(config *rest.Config) {
 	clientset, _ := dynamic.NewForConfig(config)
-	if err := delete(clientset, ns, name); err != nil {
-		fmt.Printf("namespace:%v\nerror:%v\n", ns, err)
+	if err := t.delete(clientset); err != nil {
+		fmt.Printf("namespace:%v\nerror:%v\n", t.Namespace, err)
 	}
 }
 
-func main() {
-	namespace := flag.String("ns", "default", "指定名称空间")
-	objectName := flag.String("name", "rabbitmq", "指定 rabbitmqcluster 对象的名称")
+// ParseFlags 解析命令行标志
+func (t *DeleteTarget) ParseFlags() {
+	t.Namespace = *flag.String("ns", "default", "指定名称空间")
+	t.CRName = *flag.String("name", "rabbitmq", "指定 rabbitmqcluster 对象的名称")
+	t.CRBaseInfo.Group = *flag.String("crgroup", "rabbitmq.com", "指定 CR 的 Group")
+	t.CRBaseInfo.Version = *flag.String("crversion", "v1beta1", "指定 CR 的 Version")
+	t.CRBaseInfo.Resource = *flag.String("crname", "rabbitmqclusters", "指定 CR 的名称")
 	flag.Parse()
+}
+
+func main() {
+	t := new(DeleteTarget)
+	t.ParseFlags()
+	// fmt.Println(t.CRBaseInfo.Group)
 	config, _ := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
 	// fmt.Println(reflect.TypeOf(namespace))
-	DeleteCR(config, *namespace, *objectName)
+	t.DeleteCR(config)
 }
