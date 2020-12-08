@@ -1,4 +1,4 @@
-module deletecr
+module github.com/DesistDaydream/deletecr
 
 go 1.15
 
