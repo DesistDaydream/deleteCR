@@ -1,4 +1,4 @@
-FROM golang
+FROM golang as builder
 WORKDIR /root/deletecr
 COPY * ./
 ENV CGO_ENABLED=0 \
@@ -7,5 +7,5 @@ ENV CGO_ENABLED=0 \
 RUN go get k8s.io/client-go@kubernetes-1.19.2 && go build .
 FROM alpine
 WORKDIR /root/deletecr
-COPY --from=0 /root/deletecr/deletecr /usr/local/bin/deletecr
+COPY --from=builder /root/deletecr/deletecr /usr/local/bin/deletecr
 CMD ["deletecr"]
