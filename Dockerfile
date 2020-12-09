@@ -1,6 +1,6 @@
 FROM golang as builder
 WORKDIR /root/deletecr
-COPY * ./
+COPY ./ ./
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
     GOPROXY=https://goproxy.cn,https://mirrors.aliyun.com/goproxy/,https://goproxy.io,direct
