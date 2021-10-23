@@ -1,3 +1,6 @@
+# 弃用
+改名为 [k8s-resource-operate-job](https://github.com/DesistDaydream/k8s-resource-operate-job)，添加更多功能
+
 # deleteCR
 在 helm uninstall 时，先删除 CR 再删除 operator 的工具
 
